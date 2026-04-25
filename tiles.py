@@ -39,17 +39,17 @@ class Tile:
 
 class Cherry(Tile):
     def __init__(self, pos, weight=3, enclosed=False):
-        super().init(pos, weight, enclosed)
+        super().__init__(pos, weight, enclosed)
         self.type = "C"
         
 class Bee(Tile):
-    def __init__(self, pos, weight=-10, enclosed=False):
-        super().init(pos, weight, enclosed)
+    def __init__(self, pos, weight=-5, enclosed=False):
+        super().__init__(pos, weight, enclosed)
         self.type = "B"
 
 class Apple(Tile):
     def __init__(self, pos, weight=5, enclosed=False):
-        super().init(pos, weight, enclosed)
+        super().__init__(pos, weight, enclosed)
         self.type = "A"
 
 class Wall:
@@ -74,12 +74,10 @@ class Wall:
     """
 
     def __init__(self, pos, fixed=False):
-        self.x, self.y = pos
+        self.pos = pos
         self.fixed = fixed      # fixed is True means a barrier (e.g. water)
         self.type = "W" if not fixed else "~"
-
-    def set_position(self, new_pos):
-        self.pos = new_pos
+        self.weight = 0
 
 
 class Portal:
@@ -106,3 +104,4 @@ class Portal:
         self.new_pos = new_pos
 
         self.type = "P"
+        self.weight = 1
