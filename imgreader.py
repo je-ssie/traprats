@@ -136,7 +136,7 @@ class BoardParser:
         thresholds = {
             'horse': 0.15,
             'portal': 0.03,
-            'apple': 0.03,
+            'apple': 0.10,
             'cherry': 0.02,
             'bee': 0.01,
             'water': 0.03
@@ -326,14 +326,18 @@ class BoardVisualizer:
         self.sprite_files = {
             '.': 'land.png',
             '~': 'water.png',
-            'H': 'horse.png',      # or 'R' if you use that
-            'R': 'horse.png',
-            'B': 'bees.png',
-            'C': 'cherry.png',
-            'A': 'apple.png',
-            'P': 'portal.png',
+            'r': 'horse.png',      
+            'b': 'bees.png',
+            'c': 'cherry.png',
+            'a': 'apple.png',
+            'p': 'portal.png',
             'W': 'wall.png',
-            'E': 'enclosed.png',   # enclosed land
+            '*': 'enclosed.png',   # enclosed land
+            'C': 'enc_cherry.png',
+            'R': 'enc_horse.png',
+            'B': 'enc_bee.png',
+            'A': 'enc_apple.png',
+            'P': 'enc_portal.png'
         }
         
         self._load_sprites(sprite_folder)
@@ -451,7 +455,7 @@ class BoardVisualizer:
 
 
 if __name__ == "__main__":
-    IMAGE_PATH = "107_board.png"
+    IMAGE_PATH = "119_board.png"
     ROWS = 15
     COLS = 17
     
@@ -461,7 +465,7 @@ if __name__ == "__main__":
     parser.visualize_detection("detected_board.png")
     
     # Check specific tile for calibration
-    parser.get_color_sample(10, 8)
+    parser.get_color_sample(5, 7)
     
     # Create board object
     # board = create_board_from_image(IMAGE_PATH, ROWS, COLS, placeable_walls=5)

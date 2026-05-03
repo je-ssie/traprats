@@ -329,7 +329,7 @@ class Board:
 
 if __name__ == "__main__":
 
-    IMAGE_PATH = "109_board.png"
+    IMAGE_PATH = "31_board.png"
     ROWS = 15
     COLS = 15
     
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     # parser.get_color_sample(5, 6)
     
     # Create board object
-    board = Board(ROWS, COLS, 10, IMAGE_PATH)
+    board = Board(ROWS, COLS, 13, IMAGE_PATH)
     
     result = board.solve_puzzle()
     print("Walls placed:", board.wall_pos)
