@@ -29,6 +29,7 @@ class Board:
             self.puzzle_name = image_path.replace('.png', '')
         
         self.score = -math.inf
+
         
     def create_board_from_image(self, image_path, rows, cols, walls=0):
         """
@@ -38,6 +39,7 @@ class Board:
         parser.print_grid()
         data = parser.parse()
         
+        # First pass: create all non-portal tiles
         for row in range(rows):
             for col in range(cols):
                 pos = (row, col)
@@ -53,18 +55,26 @@ class Board:
                     self.grid[row][col] = Cherry(pos)
                 elif pos in data['apples']:
                     self.grid[row][col] = Apple(pos)
-                else:
+                elif data['grid'][row][col] != 'portal':
                     self.grid[row][col] = Tile(pos)
         
-        for entry, exit_pos in data['portals']:
+        # Second pass: create portal pairs with color information
+        for portal_data in data['portals']:
+            entry_pos = portal_data['entry']
+            exit_pos = portal_data['exit']
+            color = portal_data['color']  # e.g., 'portal_sky', 'portal_blue'
             
-            portal = Portal(entry, exit_pos)
+            # Create portal with color information
+            portal = Portal(entry_pos, exit_pos, color=color)
             self.portals.append(portal)
-            x, y = entry
-            self.grid[x][y] = portal
-            x, y = exit_pos
-            self.grid[x][y] = portal
-        
+            
+            # Place the same portal object at both positions
+            entry_row, entry_col = entry_pos
+            exit_row, exit_col = exit_pos
+            self.grid[entry_row][entry_col] = portal
+            self.grid[exit_row][exit_col] = portal
+            
+            
     def __str__(self):
         grid_str = ""
         for row in self.grid:
@@ -319,7 +329,7 @@ class Board:
             
     def visualize_board(self):    # display the grid
         viz = BoardVisualizer("sprites/", tile_size=64)
-        viz.show(board, self.puzzle_name)
+        viz.show(self, self.puzzle_name)
 
 if __name__ == "__main__":
 
@@ -333,12 +343,10 @@ if __name__ == "__main__":
     # Create board object
     board = Board(ROWS, COLS, 13, IMAGE_PATH)
     
-    result = board.solve_puzzle()
-    print("Walls placed:", board.wall_pos)
-    print("Score:", board.score)
+    # result = board.solve_puzzle()
+    # print("Walls placed:", board.wall_pos)
+    # print("Score:", board.score)
     
-    print(board)
+    # print(board)
     
-    
-    viz = BoardVisualizer("sprites/", tile_size=64)
     board.visualize_board()

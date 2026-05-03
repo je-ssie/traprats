@@ -239,16 +239,16 @@ class Portal(Tile):
     def __init__(self, pos, new_pos, enclosed=False):
         """Initialize a Portal with entry/exit points and optional enclosed."""
         # Initialize base Tile with portal position.
+    def __init__(self, pos, new_pos, color = None, enclosed=False):
         super().__init__(pos, enclosed)
 
         # Store the destination coordinates for teleportation
         self.new_pos = new_pos
 
         # Set the marker based on whether it is enclosed.
-        self.type = "p" if enclosed else "P"
+        self.type = "P" if enclosed else "p"
 
         # Default weight for portal tiles.
         self.weight = 1
-        
         # added
         self.color = color
