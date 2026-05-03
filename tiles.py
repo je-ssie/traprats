@@ -58,7 +58,7 @@ class Bee(Tile):
         self.type = "b" if self.enclosed is False else "B"
 
 class Apple(Tile):
-    def __init__(self, pos, weight=6, enclosed=False):
+    def __init__(self, pos, weight=11, enclosed=False):
         super().__init__(pos, weight, enclosed)
         self.type = "a" if self.enclosed is False else "A"
 
@@ -112,3 +112,4 @@ class Portal(Tile):
         super().__init__(pos, enclosed)
         self.new_pos = new_pos   # exit point
         self.type = "p"
+        self.weight = 1

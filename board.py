@@ -104,9 +104,10 @@ class Board:
         
         # checks for portals and handles accordingly
         for portal in self.portals:
-            if portal.pos == pos:
-                if self.is_valid_position(portal.new_pos):
-                    neighbors.append(portal.new_pos)
+            if portal.pos == pos and self.is_valid_position(portal.new_pos):
+                neighbors.append(portal.new_pos)
+            elif portal.new_pos == pos and self.is_valid_position(portal.pos):
+                neighbors.append(portal.pos)
         return neighbors
     
     def get_valid_tiles(self):
@@ -192,11 +193,12 @@ class Board:
         rat_i = pos_to_i[self.rat_pos]
         model.Add(is_wall[rat_i] == 0)
         
-        # wall cannot be placed on portal entry and exit
+        # wall cannot be placed on portal positions
         for portal in self.portals:
-            portal_i = pos_to_i[portal.pos], pos_to_i[portal.new_pos]
-            model.Add(is_wall[portal_i[0]] == 0)
-            model.Add(is_wall[portal_i[1]] == 0)
+            if portal.pos in pos_to_i:
+                model.Add(is_wall[pos_to_i[portal.pos]] == 0)
+            if portal.new_pos in pos_to_i:
+                model.Add(is_wall[pos_to_i[portal.new_pos]] == 0)
         
         # rat's starting position is reachable
         model.Add(is_reachable[rat_i] == 1)
@@ -222,6 +224,12 @@ class Board:
       
         # reachability with portals
         for i, pos in enumerate(valid_tiles):
+            
+            # wall cannot be placed on special tiles (cherries, bees, apples)
+            tile = self.grid[pos[0]][pos[1]]
+            if isinstance(tile, (Apple, Bee, Cherry)):
+                model.Add(is_wall[i] == 0)
+            
             if pos == self.rat_pos:   # there is no portal where the rat is
                 continue
             
@@ -263,35 +271,6 @@ class Board:
             
             # to avoid conflicting order assignments
             model.Add(sum(comes_from) <= 1).OnlyEnforceIf(tile_i_active)
-            
-        # portal constraints
-        # if a portal entrance is reachable and not blocked, portal exit has potential to be blocked
-        for portal in self.portals:
-            if portal.pos in pos_to_i and portal.new_pos in pos_to_i:
-                entrance_i = pos_to_i[portal.pos]
-                exit_i = pos_to_i[portal.new_pos]
-                
-                # if entrance is reachable and exit is on edge, there needs to be a wall somewhere
-                if portal.new_pos in edge_tiles:
-                    # Either block entrance, block exit, or place wall to prevent reaching entrance
-                    # implicitly handled by enclosure constraint
-                    pass
-                
-                # portal connectivity
-                # portal entrance is reachable and not walled, exit is reachable (unless walled off), entrance_reachable AND NOT entrance_wall AND NOT exit_wall  --> exit_reachable
-                entrance_active = model.NewBoolVar(f'portal_entrance_{entrance_i}_active')
-                model.AddBoolAnd([
-                    is_reachable[entrance_i], 
-                    is_wall[entrance_i].Not(), 
-                    is_wall[exit_i].Not()
-                ]).OnlyEnforceIf(entrance_active)
-                model.AddBoolOr([
-                    is_reachable[entrance_i].Not(), 
-                    is_wall[entrance_i], 
-                    is_wall[exit_i]
-                ]).OnlyEnforceIf(entrance_active.Not())
-                
-                model.AddImplication(entrance_active, is_reachable[exit_i])
         
         # maximize score
         weights = []
