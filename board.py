@@ -26,6 +26,15 @@ class Board:
         self.rat_pos = None
         
         self.score = -math.inf
+        
+    def __str__(self):
+        grid_str = ""
+        for row in self.grid:
+            row_str = ""
+            for tile in row:
+                row_str += tile.type + " "
+            grid_str += row_str + "\n"
+        return grid_str
 
     def is_valid_position(self, pos):    # checks bounds and collision with walls
         if pos is None:
@@ -198,7 +207,7 @@ class Board:
                 model.AddImplication(comes_from_j, is_reachable[j])
                 model.AddImplication(comes_from_j, is_wall[j].Not())
                 model.AddImplication(comes_from_j, is_reachable[i])
-                model.AddImplication(comes_from, is_wall[i].Not())
+                model.AddImplication(comes_from_j, is_wall[i].Not())
             
             # if tile i is reachable and not a placed wall, exactly one comes_from must be true
             tile_i_active = model.NewBoolVar(f'tile_{i}_active')
@@ -245,32 +254,24 @@ class Board:
         for i, pos in enumerate(valid_tiles):
             x, y = pos
             tile = self.grid[x][y]
-            weight = tile.weight if hasattr(tile, 'weight') else 0
-            weights.append(weight)
-        
-        min_weight = min(weights) if weights else 0
-        max_weight = max(weights) if weights else 0
+            weights.append(int(getattr(tile, "weight", 0)))
+            
+        min_total = sum(w for w in weights if w < 0)
+        max_total = sum(w for w in weights if w > 0)
         
         # score is the sum of weights of the reachable tiles
-        score_terms = []
-        for i in range(n):
-            term = model.NewIntVar(min(0, min_weight), max(0, max_weight), f'score_term_{i}')
-            model.Add(term == weights[i]).OnlyEnforceIf(is_reachable[i])
-            model.Add(term == 0).OnlyEnforceIf(is_reachable[i].Not())
-            score_terms.append(term)
-        
-        min_total = sum(w for w in weights if w < 0)  # sum of all negative weights
-        max_total = sum(w for w in weights if w > 0)  # sum of all positive weights
-        total_score = model.NewIntVar(min_total, max_total, 'total_score')
-        model.Add(total_score == sum(score_terms))
+        total_score = model.NewIntVar(min_total if min_total != 0 else 0, max_total if max_total != 0 else 0, "total_score")
+        model.Add(total_score == sum(weights[i] * is_reachable[i] for i in range(n)))
         model.Maximize(total_score)
         
         # solve the puzzle
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = 60
         solver.parameters.num_search_workers = 8
-        
+    
         status = solver.Solve(model)
+        score = 0
+    
         
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             self.wall_pos = []
@@ -281,6 +282,12 @@ class Board:
                     x, y = valid_tiles[i]
                     self.grid[x][y] = Wall((x, y), False)
             
+            for i in range(len(is_reachable)):
+                if solver.Value(is_reachable[i]) == 1:
+                    row, col = valid_tiles[i]
+                    if type(self.grid[row][col]) is not Wall:
+                        self.grid[row][col].setEnclosed()
+                    
             self.score = solver.ObjectiveValue()
             return self.wall_pos, self.score
         else:
@@ -297,6 +304,7 @@ if __name__ == "__main__":
              ".~~C~.~...~...~", "....~..~.~....~", ".~......~..R..~", 
              ".~~C~..~.~....~", ".~..~.~.~.~....", ".~C~~...~.....~", 
              ".~..~...~.....~", ".~..~.........~", ".~.~~.~....~~.~"]
+
     for i, row in enumerate(str_b):
         for j, tag in enumerate(row):
             if tag == ".":
@@ -310,19 +318,11 @@ if __name__ == "__main__":
                 board.grid[i][j] = Cherry((i, j))
 
     print('Initial Board:')
-    for i in range(board.rows):
-        row_str = ""
-        for j in range(board.cols):
-            row_str += board.grid[i][j].type + " "
-        print(row_str)
+    print(board)
     print("Solving\n")
     result = board.solve_puzzle()
     print("Walls placed:", board.wall_pos)
     print("Score:", board.score)
     
     print("\nFinal Board")
-    for i in range(board.rows):
-        row_str = ""
-        for j in range(board.cols):
-            row_str += board.grid[i][j].type + " "
-        print(row_str)
+    print(board)

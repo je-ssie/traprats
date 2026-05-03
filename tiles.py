@@ -35,22 +35,32 @@ class Tile:
         self.weight = weight     # some tiles if enclosed would have more value
         self.enclosed = enclosed
         self.has_rat = has_rat     # if the tile has the rat
-        self.type = "R" if self.has_rat else "."
+        self.type = "r" if self.has_rat else "."
+    
+    def setEnclosed(self):
+        self.enclosed = True
+        if self.type == ".":
+            self.type = "*"
+        else:
+            self.type = self.type.capitalize()
+    
+    def __repr__(self):
+        return f"{self.type}"
 
 class Cherry(Tile):
-    def __init__(self, pos, weight=3, enclosed=False):
+    def __init__(self, pos, weight=4, enclosed=False):
         super().__init__(pos, weight, enclosed)
-        self.type = "C"
+        self.type = "c" if not(self.enclosed) else "C"
         
 class Bee(Tile):
-    def __init__(self, pos, weight=-5, enclosed=False):
+    def __init__(self, pos, weight=-4, enclosed=False):
         super().__init__(pos, weight, enclosed)
-        self.type = "B"
+        self.type = "b" if self.enclosed is False else "B"
 
 class Apple(Tile):
-    def __init__(self, pos, weight=5, enclosed=False):
+    def __init__(self, pos, weight=6, enclosed=False):
         super().__init__(pos, weight, enclosed)
-        self.type = "A"
+        self.type = "a" if self.enclosed is False else "A"
 
 class Wall:
     """
@@ -78,7 +88,9 @@ class Wall:
         self.fixed = fixed      # fixed is True means a barrier (e.g. water)
         self.type = "W" if not fixed else "~"
         self.weight = 0
-
+        
+    def __repr__(self):
+        return f" {self.type} "
 
 class Portal:
     """
@@ -103,5 +115,5 @@ class Portal:
         # exit point
         self.new_pos = new_pos
 
-        self.type = "P"
+        self.type = "p"
         self.weight = 1
