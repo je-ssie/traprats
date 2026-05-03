@@ -249,3 +249,6 @@ class Portal(Tile):
 
         # Default weight for portal tiles.
         self.weight = 1
+        
+        # added
+        self.color = color
