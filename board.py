@@ -22,9 +22,11 @@ class Board:
         self.wall_pos = [] # placeable walls
         self.portals = []
         self.rat_pos = None
+        self.puzzle_name = ''
         
         if image_path: 
             self.create_board_from_image(image_path, rows, cols, walls)
+            self.puzzle_name = image_path.replace('.png', '')
         
         self.score = -math.inf
         
@@ -55,7 +57,13 @@ class Board:
                     self.grid[row][col] = Tile(pos)
         
         for entry, exit_pos in data['portals']:
-            self.portals.append(Portal(entry, exit_pos))
+            
+            portal = Portal(entry, exit_pos)
+            self.portals.append(portal)
+            x, y = entry
+            self.grid[x][y] = portal
+            x, y = exit_pos
+            self.grid[x][y] = portal
         
     def __str__(self):
         grid_str = ""
@@ -331,7 +339,8 @@ class Board:
             return [], 0
             
     def visualize_board(self):    # display the grid
-        pass
+        viz = BoardVisualizer("sprites/", tile_size=64)
+        viz.show(board, self.puzzle_name)
 
 if __name__ == "__main__":
 
@@ -353,4 +362,4 @@ if __name__ == "__main__":
     
     
     viz = BoardVisualizer("sprites/", tile_size=64)
-    #viz.show(board)
+    board.visualize_board()

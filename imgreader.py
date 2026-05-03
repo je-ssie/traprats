@@ -212,11 +212,11 @@ class BoardParser:
         symbols = {
             'land': '.',
             'water': '~',
-            'horse': 'H',
-            'bee': 'B',
-            'cherry': 'C',
-            'apple': 'A',
-            'portal': 'P'
+            'horse': 'r',
+            'bee': 'b',
+            'cherry': 'c',
+            'apple': 'a',
+            'portal': 'p'
         }
         
         print(f"\nDetected {self.rows}x{self.cols} grid:\n")
@@ -436,21 +436,13 @@ class BoardVisualizer:
         
         return image
     
-    def show(self, board, enclosed_tiles=None, placed_walls=None, title="Board"):
+    def show(self, board, img_name):
         """Display the board in a window using Pillow."""
-        image = self.render(board, enclosed_tiles, placed_walls)
+        image = self.render(board)
         
         # Use PIL to show - opens in default image viewer
         pil_image = Image.fromarray(image)
-        pil_image.show(title=title)
-    
-    def save(self, filepath, board, enclosed_tiles=None, placed_walls=None):
-        """Render and save to file."""
-        image = self.render(board, enclosed_tiles, placed_walls)
-        
-        # Save using PIL
-        Image.fromarray(image).save(filepath)
-        print(f"Saved to {filepath}")
+        pil_image.show(title=img_name)
         
 
 
