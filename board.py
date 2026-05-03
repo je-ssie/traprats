@@ -10,22 +10,52 @@ from tiles import *
 import math
 from collections import deque
 from ortools.sat.python import cp_model
+from imgreader import *
 
 class Board:
 
-    def __init__(self, rows, cols, walls):
+    def __init__(self, rows, cols, walls, image_path=None):
         self.rows = rows
         self.cols = cols
-        
         self.grid = [[Tile((i, j)) for j in range(cols)] for i in range(rows)]
-                
         self.walls = walls  # placeable walls
-        self.wall_pos = []
+        self.wall_pos = [] # placeable walls
         self.portals = []
-
         self.rat_pos = None
         
+        if image_path: 
+            self.create_board_from_image(image_path, rows, cols, walls)
+        
         self.score = -math.inf
+        
+    def create_board_from_image(self, image_path, rows, cols, walls=0):
+        """
+        Create a Board object from an image.
+        """
+        parser = BoardParser(image_path, rows, cols)
+        parser.print_grid()
+        data = parser.parse()
+        
+        for row in range(rows):
+            for col in range(cols):
+                pos = (row, col)
+                
+                if pos in data['water']:
+                    self.grid[row][col] = Wall(pos, fixed=True)
+                elif pos == data['horse_pos']:
+                    self.grid[row][col] = Tile(pos, has_rat=True)
+                    self.rat_pos = pos
+                elif pos in data['bees']:
+                    self.grid[row][col] = Bee(pos)
+                elif pos in data['cherries']:
+                    self.grid[row][col] = Cherry(pos)
+                elif pos in data['apples']:
+                    self.grid[row][col] = Apple(pos)
+                else:
+                    self.grid[row][col] = Tile(pos)
+        
+        for entry, exit_pos in data['portals']:
+            self.portals.append(Portal(entry, exit_pos))
         
     def __str__(self):
         grid_str = ""
@@ -298,31 +328,21 @@ class Board:
         pass
 
 if __name__ == "__main__":
-    board = Board(15, 15, 10)
-    str_b = [".~..~..........", "~~~.~~.~~~.~~~~", "....~.C..~.C...", 
-             ".~....~..C.~...", "~~~C~~~~.~~~.~~", ".~..~..........", 
-             ".~~C~.~...~...~", "....~..~.~....~", ".~......~..R..~", 
-             ".~~C~..~.~....~", ".~..~.~.~.~....", ".~C~~...~.....~", 
-             ".~..~...~.....~", ".~..~.........~", ".~.~~.~....~~.~"]
 
-    for i, row in enumerate(str_b):
-        for j, tag in enumerate(row):
-            if tag == ".":
-                board.grid[i][j] = Tile((i, j))
-            elif tag == "~":
-                board.grid[i][j] = Wall((i, j), fixed=True)
-            elif tag == "R":
-                board.grid[i][j] = Tile((i, j), has_rat=True)
-                board.rat_pos = (i, j)
-            elif tag == "C":
-                board.grid[i][j] = Cherry((i, j))
-
-    print('Initial Board:')
-    print(board)
-    print("Solving\n")
+    IMAGE_PATH = "109_board.png"
+    ROWS = 15
+    COLS = 15
+    
+    # Check specific tile for calibration
+    # parser.get_color_sample(5, 6)
+    
+    # Create board object
+    board = Board(ROWS, COLS, 10, IMAGE_PATH)
+    
     result = board.solve_puzzle()
     print("Walls placed:", board.wall_pos)
     print("Score:", board.score)
     
-    print("\nFinal Board")
-    print(board)
+    
+    viz = BoardVisualizer("sprites/", tile_size=64)
+    viz.show(board)
