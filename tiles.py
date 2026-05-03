@@ -92,7 +92,7 @@ class Wall:
     def __repr__(self):
         return f" {self.type} "
 
-class Portal:
+class Portal(Tile):
     """
     Represents a teleport connection between two positions.
 
@@ -108,12 +108,7 @@ class Portal:
         A string representation of the class
     """
 
-    def __init__(self, pos, new_pos):
-        # entry point
-        self.pos = pos
-
-        # exit point
-        self.new_pos = new_pos
-
+    def __init__(self, pos, new_pos, enclosed=False):
+        super().__init__(pos, enclosed)
+        self.new_pos = new_pos   # exit point
         self.type = "p"
-        self.weight = 1

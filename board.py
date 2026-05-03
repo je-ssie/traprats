@@ -184,6 +184,12 @@ class Board:
         rat_i = pos_to_i[self.rat_pos]
         model.Add(is_wall[rat_i] == 0)
         
+        # wall cannot be placed on portal entry and exit
+        for portal in self.portals:
+            portal_i = pos_to_i[portal.pos], pos_to_i[portal.new_pos]
+            model.Add(is_wall[portal_i[0]] == 0)
+            model.Add(is_wall[portal_i[1]] == 0)
+        
         # rat's starting position is reachable
         model.Add(is_reachable[rat_i] == 1)
         model.Add(order[rat_i] == 0)
@@ -208,10 +214,10 @@ class Board:
       
         # reachability with portals
         for i, pos in enumerate(valid_tiles):
-            if pos == self.rat_pos:
+            if pos == self.rat_pos:   # there is no portal where the rat is
                 continue
             
-            neighbor_i = adj[i]
+            neighbor_i = adj[i]    # all the neighbors of that tile
             
             if not neighbor_i:
                 # no neighbors at all so unreachable
@@ -343,6 +349,8 @@ if __name__ == "__main__":
     print("Walls placed:", board.wall_pos)
     print("Score:", board.score)
     
+    print(board)
+    
     
     viz = BoardVisualizer("sprites/", tile_size=64)
-    viz.show(board)
+    #viz.show(board)
