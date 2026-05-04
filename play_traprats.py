@@ -47,6 +47,8 @@ class PuzzleSolverGUI:
         self.board = None
         self.visualizer = BoardVisualizer()
         self.is_solving = False
+        self.is_solved = False  # Track if puzzle has been solved
+        self.original_filename = None  # Store original filename for saving
         
         # Configure grid weights for resizing
         self.root.grid_rowconfigure(0, weight=1)
@@ -65,7 +67,7 @@ class PuzzleSolverGUI:
         # title
         title_label = tk.Label(
             left_panel, 
-            text="🐴 solver",
+            text="🐀 solver",
             font=("Helvetica", 18, "bold"),
             bg="#363636",
             fg="white"
@@ -175,6 +177,21 @@ class PuzzleSolverGUI:
         )
         self.load_btn.pack(pady=10)
         
+        # Save Solution Button
+        self.save_btn = tk.Button(
+            left_panel,
+            text="💾 Save Image",
+            font=("Helvetica", 12),
+            command=self._save_solution,
+            bg="#17a2b8",
+            fg="black",
+            width=20,
+            height=2,
+            state=tk.DISABLED,
+            cursor="hand2"
+        )
+        self.save_btn.pack(pady=10)
+        
         # Solve Button
         self.solve_btn = tk.Button(
             left_panel,
@@ -273,6 +290,7 @@ class PuzzleSolverGUI:
         
         if path:
             self.image_path = path
+            self.original_filename = os.path.splitext(os.path.basename(path))[0]
             self._display_uploaded_image(path)
             self.load_btn.config(state=tk.NORMAL)
             self.file_label.config(text=os.path.basename(path))
@@ -281,6 +299,7 @@ class PuzzleSolverGUI:
             # Reset state
             self.board = None
             self.solve_btn.config(state=tk.DISABLED)
+            self.save_btn.config(state=tk.DISABLED)
             self.score_label.config(text="---")
             self._clear_stats()
     
@@ -362,6 +381,8 @@ class PuzzleSolverGUI:
             self._display_board(self.board)
             
             self.solve_btn.config(state=tk.NORMAL)
+            self.is_solved = False
+            self.save_btn.config(state=tk.DISABLED)
             self.status_label.config(text="Board loaded! Click 'Solve Puzzle' to find solution.")
             self.score_label.config(text="---")
             self._clear_stats()
@@ -379,6 +400,7 @@ class PuzzleSolverGUI:
         self.solve_btn.config(state=tk.DISABLED)
         self.load_btn.config(state=tk.DISABLED)
         self.upload_btn.config(state=tk.DISABLED)
+        self.save_btn.config(state=tk.DISABLED)
         self.is_solving = True
         
         thread = threading.Thread(target=self._run_solver)
@@ -396,6 +418,7 @@ class PuzzleSolverGUI:
     def _on_solve_complete(self):
         """Called when solver completes successfully."""
         self.is_solving = False
+        self.is_solved = True
         
         # Display solved board
         self._display_board(self.board)
@@ -410,12 +433,12 @@ class PuzzleSolverGUI:
         # Display stats
         self._update_stats()
         
-        self.status_label.config(text="Solved!")
-        
         # Re-enable buttons
         self.solve_btn.config(state=tk.NORMAL)
         self.load_btn.config(state=tk.NORMAL)
         self.upload_btn.config(state=tk.NORMAL)
+        self.status_label.config(text="Solved! Click 'Save Solution' to save the image.")
+        self.save_btn.config(state=tk.NORMAL)
     
     def _on_solve_error(self, error_message):
         """Called when solver encounters an error."""
@@ -426,6 +449,37 @@ class PuzzleSolverGUI:
         self.solve_btn.config(state=tk.NORMAL)
         self.load_btn.config(state=tk.NORMAL)
         self.upload_btn.config(state=tk.NORMAL)
+        
+    def _save_solution(self):
+        """Save the solution image as a PNG file."""
+        if not self.is_solved or self.board is None:
+            messagebox.showwarning("No Solution", "Please solve the puzzle first.")
+            return
+        
+        # Generate default filename
+        default_filename = f"sol_{self.original_filename}.png"
+        
+        # Open save dialog
+        filetypes = [
+            ("PNG files", "*.png"),
+            ("All files", "*.*")
+        ]
+        
+        save_path = filedialog.asksaveasfilename(
+            title="Save Solution Image",
+            defaultextension=".png",
+            initialfile=default_filename,
+            filetypes=filetypes
+        )
+        
+        if save_path:
+            try:
+                self.visualizer.save(self.board, save_path)
+                self.status_label.config(text=f"Solution saved to {os.path.basename(save_path)}")
+                messagebox.showinfo("Saved", f"Solution saved successfully!\n\n{save_path}")
+            except Exception as e:
+                messagebox.showerror("Save Error", f"Failed to save image:\n{e}")
+                self.status_label.config(text="Failed to save solution.")
     
     def _update_stats(self):
         """Update the stats display by capturing board.stats() output."""

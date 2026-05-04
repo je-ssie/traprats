@@ -551,7 +551,7 @@ class BoardVisualizer:
         self.sprite_files = {
             '.': 'land.png',
             '~': 'water.png',
-            'r': 'horse.png',      
+            'r': 'rat.png',      
             'b': 'bees.png',
             'c': 'cherry.png',
             'a': 'apple.png',
@@ -564,7 +564,7 @@ class BoardVisualizer:
             'W': 'wall.png',
             '*': 'enclosed.png',   # enclosed land
             'C': 'enc_cherry.png',
-            'R': 'enc_horse.png',
+            'R': 'enc_rat.png',
             'B': 'enc_bee.png',
             'A': 'enc_apple.png',
             'PORTAL_SKY': 'enc_portal_sky.png',
@@ -685,6 +685,29 @@ class BoardVisualizer:
         # use PIL to show window in default image viewer
         pil_image = Image.fromarray(image)
         pil_image.show(title=img_name)
+        
+    def save(self, board, output_path, puzzle_name=None):
+        """
+        Save the rendered board as a PNG image.
+        
+        Parameters
+        ----------
+        board : Board
+            The board to render and save.
+        output_path : str
+            Path where the image will be saved.
+        puzzle_name : str, optional
+            Name to display on the image (not implemented, for future use).
+        
+        Returns
+        -------
+        str
+            The path where the image was saved.
+        """
+        rendered = self.render(board)
+        image = Image.fromarray(rendered)
+        image.save(output_path)
+        return output_path
         
 
 
