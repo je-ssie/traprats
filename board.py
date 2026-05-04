@@ -232,13 +232,13 @@ class Board:
             True if the position is valid for movement, False otherwise.
 
         """
-        
+
         # Handle input None.
         if pos is None:
             return False
-        
+
         x, y = pos
-        
+
         # Check if the position is within the boundary of the puzzle.
         if not (0 <= x < self.rows and 0 <= y < self.cols):
             return False
@@ -266,7 +266,7 @@ class Board:
 
         """
         x, y = pos
-        
+
         # Define the four directions: up, down, left, right.
         directions = [(0, 1), (0, -1), (-1, 0), (1, 0)]
 
@@ -289,7 +289,7 @@ class Board:
             elif portal.new_pos == pos and self.is_valid_position(portal.pos):
                 # Current position is portal exit, add entry as neighbor.
                 neighbors.append(portal.pos)
-            
+
         return neighbors
 
     def get_valid_tiles(self):
@@ -309,7 +309,7 @@ class Board:
             for j in range(self.cols):
                 if self.is_valid_position((i, j)):
                     valid.append((i, j))
-                    
+
         return valid
 
     def get_edge_tiles(self):
@@ -327,18 +327,18 @@ class Board:
         # Check every position on the grid.
         for i in range(self.rows):
             for j in range(self.cols):
-                
+
                 # Position is on the edge if in the first/law row or column.
                 if i in (0, self.rows - 1) or j in (0, self.cols - 1):
                     if self.is_valid_position((i, j)):
                         edges.add((i, j))
-                        
+
         return edges
 
     def build_adjacency_graph(self, valid_tiles, pos_to_i):
         """
         Build an adjacency list representation of the board graph.
-        
+
         Creates a graph where nodes are tile indices and edges connect adjacent
         tiles (including portal connections).
 
@@ -362,7 +362,7 @@ class Board:
 
         # Build adjacency relationships for each tile.
         for i, pos in enumerate(valid_tiles):
-            
+
             # Get neighbors (adjacent + portal connections).
             neighbors = self.get_neighbors(pos)
 
@@ -370,7 +370,7 @@ class Board:
             for neighbor in neighbors:
                 if neighbor in pos_to_i:
                     j = pos_to_i[neighbor]
-                    
+
                     # Avoid duplicate edges.
                     if j not in adj[i]:
                         adj[i].append(j)
@@ -379,7 +379,7 @@ class Board:
     def solve_puzzle(self):
         """
         Find optimal wall placements to maximize score using Google OR-Tools.
-        
+
         Solution must enclose the rat, maximize the total score of enclosed
         tiles, and be within the wall limit.
 
@@ -455,11 +455,11 @@ class Board:
             tile = self.grid[pos[0]][pos[1]]
             if isinstance(tile, (Apple, Bee, Cherry)):
                 model.Add(is_wall[i] == 0)
-            
+
             # Skip rat position.
             if pos == self.rat_pos:
                 continue
-            
+
             # Get all the neighbors of this tile.
             neighbor_i = adj[i]
 
@@ -467,7 +467,7 @@ class Board:
             if not neighbor_i:
                 model.Add(is_reachable[i] == 0)
                 continue
-            
+
             # 10. If any neighbor j is reachable AND not blocked,
             # then i must be reachable (ensures all tiles are connected).
             for j in neighbor_i:
@@ -477,7 +477,7 @@ class Board:
                      is_wall[i],               # i has a wall, OR
                      is_reachable[i]])         # i is reachable
 
-            # 11. If a tile is reachable, its order is equal to one neighbor's 
+            # 11. If a tile is reachable, its order is equal to one neighbor's
             # order + 1.
 
             # Create "comes_from" variables for each neighbor.
@@ -488,7 +488,7 @@ class Board:
 
                 # If comes_from_j is true: order[i] = order[j] + 1.
                 model.Add(order[i] == order[j] + 1).OnlyEnforceIf(comes_from_j)
-                
+
                 # comes_from_j implies both tiles are reachable and not walls.
                 model.AddImplication(comes_from_j, is_reachable[j])
                 model.AddImplication(comes_from_j, is_wall[j].Not())
@@ -506,7 +506,8 @@ class Board:
             # If active, must come from at least one neighbor.
             model.AddBoolOr(comes_from).OnlyEnforceIf(tile_i_active)
 
-            # Can only come from at most one neighbor (prevents conflicting orders).
+            # Can only come from at most one neighbor
+            # (prevents conflicting orders).
             model.Add(sum(comes_from) <= 1).OnlyEnforceIf(tile_i_active)
 
         # Extract weights for each valid tile.
@@ -514,7 +515,7 @@ class Board:
         for i, pos in enumerate(valid_tiles):
             x, y = pos
             tile = self.grid[x][y]
-            
+
             # Get weight attributes, default to 0 if not present.
             weights.append(int(getattr(tile, "weight", 0)))
 
@@ -524,18 +525,20 @@ class Board:
 
         # Create score variable bounded by possible min/max.
         total_score = model.NewIntVar(
-            min_total if min_total != 0 else 0, max_total if max_total != 0 else 0, "total_score")
-        
+            min_total if min_total != 0 else 0,
+            max_total if max_total != 0 else 0,
+            "total_score")
+
         # Score is the sum of weights of all reachable tiles.
         model.Add(total_score == sum(
             weights[i] * is_reachable[i] for i in range(n)))
-        
+
         # Maximize total score.
         model.Maximize(total_score)
 
         # Solve the puzzle.
         solver = cp_model.CpSolver()
-        
+
         # Set solver parameters.
         solver.parameters.max_time_in_seconds = 60    # Time limit.
         solver.parameters.num_search_workers = 8      # Parallel workers.
@@ -547,21 +550,21 @@ class Board:
         if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             # Clear any previous wall positions.
             self.wall_pos = []
-            
+
             # Record placed walls and update the board grid.
             for i in range(n):
                 if solver.Value(is_wall[i]) == 1:
                     self.wall_pos.append(valid_tiles[i])
                     x, y = valid_tiles[i]
-                    
+
                     # Create a non-fixed wall.
                     self.grid[x][y] = Wall((x, y), False)
-            
+
             # Mark reachable tiles as enclosed.
             for i in range(len(is_reachable)):
                 if solver.Value(is_reachable[i]) == 1:
                     row, col = valid_tiles[i]
-                    
+
                     # Don't modify wall tiles.
                     if type(self.grid[row][col]) is not Wall:
                         self.grid[row][col].setEnclosed()
@@ -587,7 +590,7 @@ class Board:
         try:
             # Create visualizer with sprites directory and tile size.
             viz = BoardVisualizer("sprites/", tile_size=64)
-            
+
             # Display the board with puzzle name as title.
             viz.show(self, self.puzzle_name)
         except Exception as e:
@@ -620,13 +623,13 @@ def main():
 
     # Solve puzzle.
     result = board.solve_puzzle()
-    
+
     # Print puzzle statistics.
     board.stats()
 
     # Uncomment to see string version of board.
     # print(board)
-    
+
     # Display the solved board.
     board.visualize_board()
 
