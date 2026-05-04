@@ -145,7 +145,36 @@ Up to 6 portals are supported.
 
 ### Puzzle Solving
 
-sabrina fill out 
+The solver uses constraint programming (Google OR-Tools CP-SAT) to find optimal wall placements that maximixe the score of enclosed tiles.
+
+Given a grid with a rat, special tiles (cherries, apples, bees), and a limited number of walls to place, find wall posiitons that:
+
+1. Enclose the rat (the rat cannot reach any edge tile)
+2. Maximize the score (sum of weights of all reachable tiles)
+3. Respect constraints (walls cannot be placed on the rat, portals, or special tiles)
+
+The decision variables can be found in the table below:
+
+| Variable | Type | Description |
+|------|-------------|-----------|
+| `is_wall[i]` | Boolean | Whether a wall is placed at tile `i` |
+| `is_reachable[i]` | Boolean | Whether the rat can reach tile `i` |
+| `order[i]` | Integer (0 to n) | Distance from rat to tile i (for connectivity) |
+| `comes_from[ j--> i]` | Boolean | Whether tile i is reached from neighbor `j` |
+
+The constraints are as follows:
+
+1. Wall budget: Total walls placed must be less than or equal to allowed walls.
+2. Enclosure: All edge tile must be unreachable.
+3. Mutual exclusion: A wall tile cannot be reachable.
+4. Rat source: Rat position is always reachable with order = 0.
+5. No walls on special tiles: Walls cannot be placed on rat, portals, apples, cherries, or bees.
+6. Connectivity via ordering: Each reachable tile (except for rat) must have exactly one neighbor with `order = neighbor + 1`, ensuring all reachable tiles form a connected region from the rat.
+
+Portals are integrated into the adjacency graph. By stepping onto a portal tile, it adds the exit location as a neighbor.
+
+Then, we maximize the weighted sum of reachable tiles.
+
 
 ### Visualization
 
@@ -161,8 +190,18 @@ The `BoardVisualizer` class renders the board state as an image.
 
 ## Comparisons with existing solution codes
 
-sabrina fill this out
+Existing repos have implemented their own solution algorithms. Our approach differs as it uses constraint programming and is able to solve puzzles with portals. More detail can be found below:
 
+| Aspect | Our Algorithm | Pink10000's ILP Solver |
+|------|-------------|-----------|
+| Framework | OR-Tools CP-SAT | PuLP with CBC/GLPK |
+| Connectivity | Ordering + `comes_from` booleans | Single-commodity flow with big-M bounds |
+| Variables | `is_wall, is_reachable, order, comes_from` | `W, E, R` (Wall/Escapable/Reachable) + flow `f` |
+| Big-M Usage | None | M = width x height for flow bounds |
+| Escapability | Implicit (edge tiles forced unreachable) | Explicit `E` variables with propagation |
+| Portal Handling | Added to adjacency graph | Deduplicated links + boundary escapability shortcuts |
+
+In summary, ILP flow solvers model escapability explicitly and use flow conservation to enforce connectivity. Our CP approach uses ordering constraints which avoids big-M numerical issues. Another solver does use CP-SAT but only models puzzles with cherries.
 
 ## Acknowledgments
 
@@ -170,3 +209,5 @@ sabrina fill this out
 - [Google OR-Tools](https://developers.google.com/optimization) - Constraint programming solver
 - [Pillow](https://pillow.readthedocs.io/) - Image processing library
 - [NumPy](https://numpy.org/) - Numerical computing library
+- [ILP Solver](https://github.com/pink10000/eh_ilp_solver/blob/main/enclose_engine/solver.py) - enclose.horse solver using ILP solver
+- [CP-SAT Cherry Solver](https://github.com/langarus/enclosure.horse-solution/blob/master/solve.py) - enclose.horse solver using CP-SAT for boards with cherries
