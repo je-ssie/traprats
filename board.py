@@ -37,43 +37,46 @@ class Board:
         """
         Create a Board object from an image.
         """
-        parser = BoardParser(image_path, rows, cols)
-        data = parser.parse()
-        
-        # First pass: create all non-portal tiles
-        for row in range(rows):
-            for col in range(cols):
-                pos = (row, col)
+        try: 
+            parser = BoardParser(image_path, rows, cols)
+            data = parser.parse()
+            
+            # First pass: create all non-portal tiles
+            for row in range(rows):
+                for col in range(cols):
+                    pos = (row, col)
+                    
+                    if pos in data['water']:
+                        self.grid[row][col] = Wall(pos, fixed=True)
+                    elif pos == data['rat_pos']:
+                        self.grid[row][col] = Tile(pos, has_rat=True)
+                        self.rat_pos = pos
+                    elif pos in data['bees']:
+                        self.grid[row][col] = Bee(pos)
+                    elif pos in data['cherries']:
+                        self.grid[row][col] = Cherry(pos)
+                    elif pos in data['apples']:
+                        self.grid[row][col] = Apple(pos)
+                    elif data['grid'][row][col] != 'portal':
+                        self.grid[row][col] = Tile(pos)
+            
+            # Second pass: create portal pairs with color information
+            for portal_data in data['portals']:
+                entry_pos = portal_data['entry']
+                exit_pos = portal_data['exit']
+                color = portal_data['color']  # e.g., 'portal_sky', 'portal_blue'
                 
-                if pos in data['water']:
-                    self.grid[row][col] = Wall(pos, fixed=True)
-                elif pos == data['rat_pos']:
-                    self.grid[row][col] = Tile(pos, has_rat=True)
-                    self.rat_pos = pos
-                elif pos in data['bees']:
-                    self.grid[row][col] = Bee(pos)
-                elif pos in data['cherries']:
-                    self.grid[row][col] = Cherry(pos)
-                elif pos in data['apples']:
-                    self.grid[row][col] = Apple(pos)
-                elif data['grid'][row][col] != 'portal':
-                    self.grid[row][col] = Tile(pos)
-        
-        # Second pass: create portal pairs with color information
-        for portal_data in data['portals']:
-            entry_pos = portal_data['entry']
-            exit_pos = portal_data['exit']
-            color = portal_data['color']  # e.g., 'portal_sky', 'portal_blue'
-            
-            # Create portal with color information
-            portal = Portal(entry_pos, exit_pos, color=color)
-            self.portals.append(portal)
-            
-            # Place the same portal object at both positions
-            entry_row, entry_col = entry_pos
-            exit_row, exit_col = exit_pos
-            self.grid[entry_row][entry_col] = portal
-            self.grid[exit_row][exit_col] = portal
+                # Create portal with color information
+                portal = Portal(entry_pos, exit_pos, color=color)
+                self.portals.append(portal)
+                
+                # Place the same portal object at both positions
+                entry_row, entry_col = entry_pos
+                exit_row, exit_col = exit_pos
+                self.grid[entry_row][entry_col] = portal
+                self.grid[exit_row][exit_col] = portal
+        except Exception as e:
+            print(f"Error occurred: {e}")
             
             
     def __str__(self):
@@ -329,8 +332,11 @@ class Board:
             return [], 0
             
     def visualize_board(self):    # display the grid
-        viz = BoardVisualizer("sprites/", tile_size=64)
-        viz.show(self, self.puzzle_name)
+        try: 
+            viz = BoardVisualizer("sprites/", tile_size=64)
+            viz.show(self, self.puzzle_name)
+        except Exception as e:
+            print(f"Visualization failed: {e}")
         
     def stats(self):
         print(f"Puzzle: {self.puzzle_name}")
@@ -341,10 +347,10 @@ class Board:
 def main():
     
     # modify this part to test different puzzles
-    image_file = "52_board.png"
-    ROWS = 17
+    image_file = "114_board.png"
+    ROWS = 11
     COLS = 17
-    WALLS = 8
+    WALLS = 11
     
     # create board
     board = Board(ROWS, COLS, WALLS, image_path = image_file)

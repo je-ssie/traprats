@@ -390,9 +390,9 @@ class BoardParser:
                     'color': portal_type
                 })
             elif len(positions) > 2:
-                print(f"Warning: Too many positions for {portal_type}")
+                raise Exception(f"Too many positions for {portal_type}")
             elif len(positions) == 1:
-                print(f"Warning: Unpaired {portal_type} at {positions[0]}")
+                raise Exception(f"Warning: Unpaired {portal_type} at {positions[0]}")
         
         return {
             'rows': self.rows,
@@ -606,7 +606,7 @@ class BoardVisualizer:
                 sprite = sprite.resize((self.tile_size, self.tile_size), Image.NEAREST)
                 self.sprites[tile_type] = np.array(sprite)
             else:
-                print(f"Warning: {filepath} not found")
+                raise FileNotFoundError(f"{filepath} not found.")
         
         # create fallback sprite (magenta for missing)
         fallback = np.full((self.tile_size, self.tile_size, 3), [255, 0, 255], dtype=np.uint8)
@@ -699,7 +699,7 @@ if __name__ == "__main__":
     COLS = 17
     
     
-    board = Board(ROWS, COLS, 13, IMAGE_PATH)
+    board = Board(ROWS, COLS, 13, image_path=IMAGE_PATH)
     # parser = BoardParser(IMAGE_PATH, ROWS, COLS)
     # parser.print_grid()
     # parser.get_color_sample(11, 1)
