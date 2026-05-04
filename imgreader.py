@@ -129,9 +129,6 @@ class BoardParser:
         self.tile_height = self.height / self.rows
         self.tile_width = self.width / self.cols
         
-        print(f"Image size: {self.width}x{self.height}")
-        print(f"Tile size: {self.tile_width:.1f}x{self.tile_height:.1f}")
-    
     def _get_tile_bounds(self, row, col):
         """
         Get the pixel boundaries for a specific tile.
