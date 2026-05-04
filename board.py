@@ -36,7 +36,6 @@ class Board:
         Create a Board object from an image.
         """
         parser = BoardParser(image_path, rows, cols)
-        parser.print_grid()
         data = parser.parse()
         
         # First pass: create all non-portal tiles
@@ -46,7 +45,7 @@ class Board:
                 
                 if pos in data['water']:
                     self.grid[row][col] = Wall(pos, fixed=True)
-                elif pos == data['horse_pos']:
+                elif pos == data['rat_pos']:
                     self.grid[row][col] = Tile(pos, has_rat=True)
                     self.rat_pos = pos
                 elif pos in data['bees']:
