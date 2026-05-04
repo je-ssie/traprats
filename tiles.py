@@ -236,11 +236,10 @@ class Portal(Tile):
         The value the portal contributes towards the final score when enclosed.
     """
 
-    def __init__(self, pos, new_pos, enclosed=False):
+    def __init__(self, pos, new_pos, color=None, enclosed=False):
         """Initialize a Portal with entry/exit points and optional enclosed."""
         # Initialize base Tile with portal position.
-    def __init__(self, pos, new_pos, color = None, enclosed=False):
-        super().__init__(pos, enclosed)
+        super().__init__(pos, enclosed=enclosed)
 
         # Store the destination coordinates for teleportation
         self.new_pos = new_pos
@@ -250,5 +249,6 @@ class Portal(Tile):
 
         # Default weight for portal tiles.
         self.weight = 1
-        # added
+
+        # Color of the portal (for visualization)
         self.color = color
