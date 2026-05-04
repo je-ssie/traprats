@@ -650,7 +650,7 @@ class BoardVisualizer:
                 if tile.type == 'p':
                     sprite_type = tile.color
                 elif tile.type == 'P': # enclosed portal
-                    sprite_type = tile.color.capitalize()
+                    sprite_type = tile.color.upper()
                 else:
                     sprite_type = tile.type
                 

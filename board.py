@@ -14,7 +14,7 @@ from imgreader import *
 
 class Board:
 
-    def __init__(self, rows, cols, walls, image_path=None):
+    def __init__(self, rows, cols, walls, puzzle_name=None, image_path=None):
         self.rows = rows
         self.cols = cols
         self.grid = [[Tile((i, j)) for j in range(cols)] for i in range(rows)]
@@ -22,11 +22,13 @@ class Board:
         self.wall_pos = [] # placeable walls
         self.portals = []
         self.rat_pos = None
-        self.puzzle_name = ''
         
         if image_path: 
             self.create_board_from_image(image_path, rows, cols, walls)
             self.puzzle_name = image_path.replace('.png', '')
+            
+        if puzzle_name:
+            self.puzzle_name = puzzle_name
         
         self.score = -math.inf
 
@@ -329,23 +331,40 @@ class Board:
     def visualize_board(self):    # display the grid
         viz = BoardVisualizer("sprites/", tile_size=64)
         viz.show(self, self.puzzle_name)
+        
+    def stats(self):
+        print(f"Puzzle: {self.puzzle_name}")
+        print(f"Size: {self.rows} x {self.cols}")
+        print(f"# of walls allowed: {self.walls}")
+        print(f"Board score: {self.score}")
 
-if __name__ == "__main__":
-
-    IMAGE_PATH = "31_board.png"
-    ROWS = 15
-    COLS = 15
+def main():
     
-    # Check specific tile for calibration
-    # parser.get_color_sample(5, 6)
+    # modify this part to test different puzzles
+    image_file = "52_board.png"
+    ROWS = 17
+    COLS = 17
+    WALLS = 8
     
-    # Create board object
-    board = Board(ROWS, COLS, 13, IMAGE_PATH)
+    # create board
+    board = Board(ROWS, COLS, WALLS, image_path = image_file)
+    print("Loaded puzzle successfully.")
     
-    # result = board.solve_puzzle()
-    # print("Walls placed:", board.wall_pos)
-    # print("Score:", board.score)
+    # uncomment below to see initial board before solving
+    board.visualize_board()
     
+    # solve puzzle
+    result = board.solve_puzzle()
+    board.stats()
+    
+    # uncomment to see string version of board
     # print(board)
     
     board.visualize_board()
+    
+    
+    
+if __name__ == "__main__":
+
+    main()
+    
