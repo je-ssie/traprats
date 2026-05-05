@@ -24,9 +24,10 @@ conda activate traprats-env
 ### Required packages
 
 Install the required packages:
+* installing conda version of ortools-python causes version issues, so at least for ortools please pip install it.
 
 ```
-conda install pillow numpy ortools-python
+pip install pillow numpy ortools
 ```
 
 ## Usage
