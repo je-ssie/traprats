@@ -26,7 +26,7 @@ conda activate traprats-env
 Install the required packages:
 
 ```
-pip install pillow numpy ortools
+conda install pillow numpy ortools-python
 ```
 
 ## Usage
