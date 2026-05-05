@@ -1,5 +1,7 @@
 # traprats
-software carpentry final project
+Software Carpentry final project -- Jessie Huh and Sabrina Chen
+
+An automated solver for the [enclose.horse](https://enclose.horse) puzzle game. This tool parses puzzle images, solves them using constraint programming, and visualizes the solutions.
 
 ## Installation
 
